@@ -1,8 +1,5 @@
 # PLAN — Agentic Resume Optimiser (SG/SEA)
 
-Status: **Phase 0 (plan): awaiting review.** No app code has been written yet.
-Last updated: 2026-09-25
-
 ---
 
 ## 0. Verified facts (checked 2026-09-25, not from memory)
@@ -20,10 +17,6 @@ Last updated: 2026-09-25
 | npm `latest` | next 16.3.6 · react 19.3.0 · ai 7.0.114 · @ai-sdk/anthropic 4.0.63 · zod 4.6.5 · unpdf 1.8.1 · drizzle-orm 0.45.3 · drizzle-kit 0.31.11 · @neondatabase/serverless 1.1.0 · @upstash/ratelimit 2.2.0 · @upstash/redis 1.39.0 · vitest 5.0.2 · @playwright/test 1.63.0 · tailwindcss 4.3.3 · eslint 10.11.0 · prettier 3.9.9 · recharts 3.10.1 · shadcn 4.21.0 · pdf-lib 1.17.1 | `npm view` |
 | TypeScript | `latest` is 7.0.2 (the Go-native compiler), but typescript-eslint 8.70 peers `typescript <6.1`. **Pin `typescript@~6.0.3`** | `npm view` |
 | AI SDK v7 | `generateObject` / `streamObject` still exported. `generateText({ output: Output.object({ schema }) })` is the recommended path. `usage.inputTokenDetails.{cacheReadTokens,cacheWriteTokens}` is available. The mock models are `MockLanguageModelV4` in `ai/test` | inspected `ai@7.0.114` typings |
-
-⚠️ **Two conflicts with the brief** (see §11, Q1–Q2):
-1. **5 MB upload vs the 4.5 MB Vercel body cap.** A 5 MB PDF can't reach a function unless it goes through blob storage, and the brief forbids blob storage. I'm proposing **4 MB**.
-2. **Prompt caching on Haiku 4.5 needs ≥4096 cached tokens.** Our per-agent static prompts are about 1–2k tokens, so they **won't cache on Haiku** unless we pad them. Padding costs more than it saves at our traffic, and the 5-minute TTL mostly expires between analyses anyway. The plan keeps `cacheControl` breakpoints, which cost nothing below the minimum and start working as soon as an agent is switched to Sonnet 5 (1024 minimum). It also logs cache read/write tokens so this is measured, not assumed.
 
 ---
 
