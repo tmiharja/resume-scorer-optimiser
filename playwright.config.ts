@@ -26,6 +26,8 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    env: { LLM_MOCK: "1", RATE_LIMIT_PER_DAY: "5" },
+    // A high limit: the suite runs many analyses from one IP. The 429 path has
+    // unit tests and a UI test with a mocked response.
+    env: { LLM_MOCK: "1", RATE_LIMIT_PER_DAY: "1000" },
   },
 });

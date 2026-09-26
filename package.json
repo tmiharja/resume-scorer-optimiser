@@ -18,13 +18,19 @@
     "test:e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm run format:check && npm run test",
     "fixtures": "tsx evals/generate-fixtures.mts",
-    "eval": "tsx evals/run.mts"
+    "eval": "tsx evals/run.mts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "4.0.63",
+    "@neondatabase/serverless": "1.1.0",
+    "@upstash/ratelimit": "2.2.0",
+    "@upstash/redis": "1.39.0",
     "ai": "7.0.114",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "drizzle-orm": "0.45.3",
     "framer-motion": "12.43.0",
     "next": "16.3.6",
     "radix-ui": "1.6.7",
@@ -40,6 +46,7 @@
     "@types/node": "22.20.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "drizzle-kit": "0.31.11",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.6",
     "eslint-config-prettier": "10.1.8",

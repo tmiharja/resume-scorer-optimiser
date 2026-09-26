@@ -1,0 +1,268 @@
+{
+  "id": "1c13ad62-0f10-4295-abb2-da50fac42752",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.analyses": {
+      "name": "analyses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "region": {
+          "name": "region",
+          "type": "region",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'SG'"
+        },
+        "role_family": {
+          "name": "role_family",
+          "type": "role_family",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seniority": {
+          "name": "seniority",
+          "type": "seniority",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "industry": {
+          "name": "industry",
+          "type": "industry",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "yoe_bucket": {
+          "name": "yoe_bucket",
+          "type": "yoe_bucket",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "page_count": {
+          "name": "page_count",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "overall_score": {
+          "name": "overall_score",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dimension_scores": {
+          "name": "dimension_scores",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jd_provided": {
+          "name": "jd_provided",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jd_match_score": {
+          "name": "jd_match_score",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "injection_flagged": {
+          "name": "injection_flagged",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rubric_version": {
+          "name": "rubric_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "models": {
+          "name": "models",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "input_tokens": {
+          "name": "input_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "output_tokens": {
+          "name": "output_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cost_usd": {
+          "name": "cost_usd",
+          "type": "numeric(10, 6)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latency_ms": {
+          "name": "latency_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "analysis_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "page_count_range": {
+          "name": "page_count_range",
+          "value": "\"analyses\".\"page_count\" between 1 and 4"
+        },
+        "overall_score_range": {
+          "name": "overall_score_range",
+          "value": "\"analyses\".\"overall_score\" is null or \"analyses\".\"overall_score\" between 0 and 100"
+        },
+        "jd_match_range": {
+          "name": "jd_match_range",
+          "value": "\"analyses\".\"jd_match_score\" is null or \"analyses\".\"jd_match_score\" between 0 and 100"
+        },
+        "rubric_version_format": {
+          "name": "rubric_version_format",
+          "value": "\"analyses\".\"rubric_version\" ~ '^[a-z]{2}-[0-9]{4}\\.[0-9]{2}\\.[0-9]+$'"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.industry": {
+      "name": "industry",
+      "schema": "public",
+      "values": [
+        "tech",
+        "finance_banking",
+        "consulting",
+        "public_sector",
+        "healthcare",
+        "education",
+        "manufacturing",
+        "logistics",
+        "retail_ecommerce",
+        "media_marketing",
+        "real_estate",
+        "energy",
+        "hospitality",
+        "telco",
+        "other",
+        "unknown"
+      ]
+    },
+    "public.region": {
+      "name": "region",
+      "schema": "public",
+      "values": [
+        "SG"
+      ]
+    },
+    "public.role_family": {
+      "name": "role_family",
+      "schema": "public",
+      "values": [
+        "software_eng",
+        "data_analytics",
+        "product",
+        "design",
+        "marketing",
+        "sales_bd",
+        "finance_accounting",
+        "operations_supply_chain",
+        "hr",
+        "consulting",
+        "legal",
+        "healthcare",
+        "education",
+        "engineering_other",
+        "admin",
+        "customer_service",
+        "research_science",
+        "other",
+        "unknown"
+      ]
+    },
+    "public.seniority": {
+      "name": "seniority",
+      "schema": "public",
+      "values": [
+        "intern",
+        "entry",
+        "mid",
+        "senior",
+        "lead_manager",
+        "director_plus",
+        "unknown"
+      ]
+    },
+    "public.analysis_status": {
+      "name": "analysis_status",
+      "schema": "public",
+      "values": [
+        "success",
+        "partial",
+        "rejected_not_resume",
+        "error"
+      ]
+    },
+    "public.yoe_bucket": {
+      "name": "yoe_bucket",
+      "schema": "public",
+      "values": [
+        "0-1",
+        "2-4",
+        "5-9",
+        "10-14",
+        "15+",
+        "unknown"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

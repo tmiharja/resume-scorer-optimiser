@@ -77,12 +77,8 @@ export default function Analyzer({
       {hero}
       <div className="page-col">
         {error?.kind === "rate_limited" && (
-          <Notice
-            tone="info"
-            role="status"
-            title={`You've used today's ${dailyLimit} free analyses`}
-            className="mt-2"
-          >
+          // The server's message states the real limit ("You've used today's 5 free analyses.").
+          <Notice tone="info" role="status" title={error.message} className="mt-2">
             <p>
               {resetTime(error.resetAt)
                 ? `You can analyse again after ${resetTime(error.resetAt)}.`

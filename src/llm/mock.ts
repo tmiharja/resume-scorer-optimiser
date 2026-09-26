@@ -242,7 +242,8 @@ function respond(prompt: Prompt): Json {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function createMockModel(delayMs = 250) {
+/** LLM_MOCK_DELAY_MS sets the per-call delay (default 250 ms, so progress is visible). */
+export function createMockModel(delayMs = Number(process.env.LLM_MOCK_DELAY_MS ?? 250)) {
   return new MockLanguageModelV4({
     provider: "mock",
     modelId: "mock",

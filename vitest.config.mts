@@ -9,6 +9,6 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.ts"],
     environment: "node",
     // Unit tests must never reach real services.
-    env: { LLM_MOCK: "1" },
+    env: { LLM_MOCK: "1", LLM_MOCK_DELAY_MS: "0" },
   },
 });
