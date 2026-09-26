@@ -10,7 +10,7 @@ export default function Privacy() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-page flex-1 px-6 pt-36 pb-24 sm:pt-44">
+      <main id="main" className="page-col flex-1 pt-36 pb-24 sm:pt-44">
         <h1 className="text-3xl font-medium tracking-tight">Privacy</h1>
         <div className="mt-8 space-y-5 text-[17px] leading-relaxed">
           <p>

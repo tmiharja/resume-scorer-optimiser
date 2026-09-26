@@ -16,4 +16,4 @@ Requirements (see `ui-layout.md` §4.1):
 - Keep the subject out of the bottom third, where the image fades into the page and the headline sits.
 - Your own image, or one licensed for web use.
 
-The hero component that uses them is built in Phase 4.
+Then wire them up in `src/img/hero.ts` (one import per image; instructions are in that file). Until then the hero shows a neutral placeholder.

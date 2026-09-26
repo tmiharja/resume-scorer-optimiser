@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { cn } from "@/lib/utils";
-import { type PageWidth, widthClass } from "./layout-width";
 
-export default function SiteFooter({ width = "page" }: { width?: PageWidth }) {
+export default function SiteFooter() {
   return (
-    <footer className={cn("mx-auto w-full px-6 pb-12", widthClass[width])}>
+    <footer className="page-col pb-12">
       <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-rule pt-8 text-[13px] text-muted">
         <Link href="/privacy" className="link">
           Privacy
