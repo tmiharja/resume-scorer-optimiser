@@ -456,6 +456,36 @@ Decisions made while scaffolding:
   - 69 unit tests: validation, every hidden-text technique, NRIC checksum and masking, SG hints, keyword stuffing, encrypted / image-only / corrupt / 5-page rejections, route guards, fixture regressions. The password-protected test PDF is generated with a hand-rolled RC4 security handler.
   - 4 API e2e tests against the production build.
 
+### Phase 3 status: built and tested with a mocked model; real-API evals pending
+
+- **Agents** (`src/agents/`):
+  - `extractor`, `critic`, `matcher`, `rewriter`, `verifier`, each a typed function with its own prompt in `src/prompts/` and a Zod output schema in `src/schemas/`.
+  - `orchestrator.ts` runs Extractor → (Critic ‖ Matcher) → Rewriter → Verifier → fact guard, emits SSE step events, and returns the result plus a content-free run summary (tokens, cost, latency, models, analytics enums).
+- **`runAgent()`**, the shared wrapper around every call:
+  - AI SDK v7 `generateText({ output: Output.object(...) })`;
+  - security preamble plus a prompt-cache breakpoint on the static system prompt (`instructions`, which replaces v7's deprecated `system`);
+  - SDK retries for 429/5xx (`maxRetries: 2`) and **one schema-repair retry**;
+  - per-step timeouts (45–60 s) under a 270 s pipeline deadline;
+  - client-disconnect cancellation;
+  - token usage and cost summed across attempts, failed ones included.
+- **Lenient schemas**:
+  - `@ai-sdk/anthropic` already moves unsupported constraints (`maxLength`, `minimum`, …) into schema descriptions, but the SDK validates the full Zod schema client-side.
+  - So the field builders in `src/schemas/helpers.ts` state limits as hints, then **trim / clamp** instead of failing. A slightly long string doesn't cost a paid retry.
+- **Deterministic parts**:
+  - Bullet IDs (`e1b2`) are assigned in code, and unknown IDs from the model are discarded.
+  - The overall score is a weighted mean in code. Verifier adjustments are capped at ±10 per dimension, and the rubric cap applies (2+ high-severity items → at most 70).
+  - **Fact guard**: any rewrite that contains a number or a capitalised name/tool not in the source resume is dropped, whether or not the Verifier ran.
+- **Models**:
+  - `MODEL_*` env vars, Haiku 4.5 by default.
+  - Sonnet 5 gets `thinking: { type: "disabled" }`, since it thinks by default and that would break the cost estimate.
+  - `LLM_MOCK=1` swaps in a deterministic mock (`src/llm/mock.ts`, loaded via dynamic import) for e2e tests and offline development.
+- **Route**: `POST /api/analyze` now streams `text/event-stream` (`src/lib/sse.ts` holds the encoder and a validated parser for the browser client). Ingest and validation errors stay plain 4xx before the stream opens. Each run logs one allowlisted JSON line with token usage and cost.
+- **Evals**:
+  - `npm run eval` runs the 11 fixtures on the real API. Expectations live in `evals/cases.ts`: score ranges, must-flag checks, a clean-twin comparison for the injection case, and a must-not-hallucinate fact-guard check on every rewrite.
+  - It prints a pass/fail table plus total cost and writes the outputs to `evals/results/latest.json` (git-ignored).
+  - `EVAL_MOCK=1` checks the plumbing without API calls. **The real-API run is pending**: the sandbox that built Phase 3 had no `ANTHROPIC_API_KEY`. Ranges and prompts may need one round of tuning after the first real run.
+- **Tests**: 105 unit tests (36 new for Phase 3: schema helpers, delimiter escaping, fact guard, scoring, `runAgent` retry/timeout, orchestrator happy path / parallelism / each partial failure / not-a-resume / cancellation / cost aggregation, SSE round-trip, streaming route) and 10 e2e tests, including the full streamed pipeline on the production build.
+
 ## 11. Open questions (defaults marked ★, used if you don't say otherwise)
 
 1. **Upload cap**: ★ **4 MB** (below Vercel's 4.5 MB body limit; resumes are rarely over 1 MB). The alternative, client-side upload to Vercel Blob with an immediate delete, breaks your "never blob" rule.
@@ -500,3 +530,59 @@ The UI must be **minimalistic and match the portfolio site** ([tmiharja/portfoli
 - **Theme**: follows the system light/dark setting. A header toggle overrides it and is saved in `localStorage`, with no flash on load (same inline script pattern as the portfolio).
 - **Components**: shadcn/ui primitives are kept, but restyled to these tokens (card and shadow styles removed). The score ring and dimension bars are plain SVG/HTML, so **Recharts is dropped** from the dependency list. **`framer-motion` is added** for `Reveal`.
 
+
+## 14. Quality tuning plan (decided 2026-09-26)
+
+We don't fine-tune Claude. "Tuning" means improving the prompts, rubric, schema descriptions, deterministic rules and output limits, measured against evals. No user data is involved: resumes are never stored.
+
+**Decisions**
+- Toni will score **10–15 resumes** as gold labels for calibration.
+- **Tuning budget: US$15 cap** (a one-off development cost, separate from the $20/month runtime budget). The runner refuses to start a run that would exceed what's left.
+- **No model upgrade**: every production agent stays on Haiku 4.5. Sonnet 5 may be used only as the offline AI judge in evals, which is dev spend inside the $15 cap and never runs in production.
+
+**Targets**
+
+| Goal | Target |
+|---|---|
+| Rewrites failing the fact check | 0 (hard gate) |
+| Recall on must-flag items | ≥ 95% |
+| Score within ±10 of gold | ≥ 80% of gold cases |
+| Strong-vs-weak pair ordering | ≥ 95% |
+| Spread across repeat runs | ≤ ±5 points |
+| Injection vs clean twin | ≤ 10 points |
+| AI-judge feedback quality | ≥ 4 / 5 |
+| Cost / latency per analysis | ≤ $0.06 / ≤ 90 s |
+
+**Budget plan (≈ $14)**
+- ~36 synthetic resumes: the current 11, plus strong/weak pairs and more roles and seniority levels.
+- Split stratified: **train ≈ 60%** (outputs read to propose changes) and **test ≈ 40%** (scores only; they decide whether a change is kept).
+- Baseline × 2 reps (~$3.3) to measure noise, then up to 5 rounds × 1 rep (~$8), plus the Sonnet 5 judge on test cases only (~$2).
+- One change per round. Keep it only if test improves beyond noise and no guardrail regresses. Stop after 3 flat rounds or when the budget is spent.
+
+**Where tuning outputs live**
+
+```
+evals/
+├── fixtures/                     committed: synthetic PDFs + JDs
+│   └── manifest.json             committed: case list, tags, train/test split, strong/weak pairs
+├── gold/
+│   ├── gold-scores.csv           committed: Toni's scores (case, 5 dimensions, notes)
+│   └── README.md                 committed: scoring guide for the gold labels
+├── cases.ts                      committed: per-case assertions (existing)
+├── run.mts                       committed: runner (existing; gains --reps, --round, budget guard)
+├── judge.mts                     committed: AI-judge for feedback quality (Sonnet 5, evals only)
+├── tuning/
+│   ├── TUNING.md                 committed: round-by-round table (change, train, test, cost, kept?)
+│   ├── state.json                committed: split IDs, best round, spend to date vs the $15 cap
+│   └── rounds/vN/
+│       ├── change.md             committed: what changed, why, which train failures motivated it
+│       ├── summary.json          committed: aggregate metrics for train and test, with noise bands
+│       ├── results.jsonl         committed: per case × rep scores, flags, pass/fail, tokens, cost
+│       ├── judge.jsonl           committed: AI-judge grades per feedback item (test cases)
+│       └── outputs/              git-ignored: full per-case results (synthetic, but large)
+└── results/latest.json           git-ignored: last ad-hoc `npm run eval` (existing)
+```
+
+Each round's prompt/rubric change is its own git commit, and prompt and rubric versions are bumped (`RUBRIC_VERSION`, plus a new `PROMPT_VERSION`). So any round can be reproduced, and TUNING.md links each round to its commit.
+
+**Order**: Phase 4 (UI) and tuning can run in parallel, since tuning changes prompts, not the result format. Tuning needs a session that has `ANTHROPIC_API_KEY`.

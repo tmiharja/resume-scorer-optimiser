@@ -17,9 +17,12 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm run format:check && npm run test",
-    "fixtures": "tsx evals/generate-fixtures.mts"
+    "fixtures": "tsx evals/generate-fixtures.mts",
+    "eval": "tsx evals/run.mts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "4.0.63",
+    "ai": "7.0.114",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "framer-motion": "12.43.0",
