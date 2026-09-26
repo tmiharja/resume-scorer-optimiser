@@ -429,17 +429,24 @@ Assumptions: a 2-page resume of about 1,500 tokens and a JD of about 1,500 token
 
 ## 13. Look and feel (requirement)
 
-The UI must be **minimalistic and match the portfolio site** ([tmiharja/portfolio-website](https://github.com/tmiharja/portfolio-website)), so the two feel like one family. Screen-by-screen layout, states and wireframes are in [`ui-layout.md`](ui-layout.md).
+The UI must be **minimalistic and match the portfolio site** ([tmiharja/portfolio-website](https://github.com/tmiharja/portfolio-website)), so the two feel like one family. Screen-by-screen layout, states and decisions are in [`ui-layout.md`](ui-layout.md), and the wireframes are in [`mockups/`](mockups/).
 
 - **Design tokens**: copied from the portfolio's `src/app/globals.css`, in both light and dark themes.
   - Light: background `#fbfbf9`, text `#1a1a1a`, muted `#5f5f5f`, hairline rule `#e6e4df`, single accent `#1f4e79`, accent-soft `#eef3f8`.
   - Dark: `#131416` / `#e8e6e1` / `#9a9a94` / `#2a2c30` / `#8fb4dc` / `#1b2733`.
   - The only additions are sparing semantic colours for warnings (amber) and errors (red), each with a soft background variant.
 - **Typography**: the same system stack (`Helvetica, "Helvetica Neue", Arial, sans-serif`) with no web fonts. Headings use medium/semibold weight with tight tracking. Numbers use `tabular-nums`.
-- **Layout**: one centred column, `max-width: 680px`, `px-6`, generous vertical spacing between sections. Mobile-first, and the column is the same on desktop.
-- **Surfaces**: hairline rules and dividers instead of cards. **No shadows, gradients or decorative imagery.** Radius is small (6–10 px).
+- **Layout**: one centred column with `px-6` and generous vertical spacing between sections. It's `max-width: 680px` on landing, progress and `/privacy`, and **760px on the results page**. Mobile-first, with no multi-column layouts on desktop.
+- **Surfaces**: hairline rules and dividers instead of cards. **No shadows or decorative imagery.** Radius is small (6–10 px).
+- **Hero**: the landing page has a full-width **background image band** like the portfolio hero:
+  - light and dark variants (the image will be supplied by Toni);
+  - a fade into the page background;
+  - the transparent header sits over it.
+
+  The hero is on the landing screen only.
 - **Colour discipline**: one accent colour for interactive elements and data (score ring, bars, matched keywords). Severity and state are always shown as a text label, never by colour alone.
-- **Interaction**: the portfolio's link style (accent colour, underline on hover/focus), `2px` accent focus ring, and subtle fade-up on sections (0.35 s). All motion is disabled under `prefers-reduced-motion`.
+- **Interaction**: the portfolio's link style (accent colour, underline on hover/focus), `2px` accent focus ring, and subtle fade-up on sections (0.35 s) using the **portfolio's `Reveal` component with `framer-motion`**. All motion is disabled under `prefers-reduced-motion`.
+- **Branding**: the text wordmark "Resume Optimiser" in the header, and "Built by toninmotion" in the footer, linking to the portfolio.
 - **Theme**: follows the system light/dark setting. A header toggle overrides it and is saved in `localStorage`, with no flash on load (same inline script pattern as the portfolio).
-- **Components**: shadcn/ui primitives are kept, but restyled to these tokens (card and shadow styles removed). The score ring and dimension bars are plain SVG/HTML, so **Recharts is dropped** from the dependency list.
+- **Components**: shadcn/ui primitives are kept, but restyled to these tokens (card and shadow styles removed). The score ring and dimension bars are plain SVG/HTML, so **Recharts is dropped** from the dependency list. **`framer-motion` is added** for `Reveal`.
 

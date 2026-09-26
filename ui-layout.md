@@ -1,15 +1,15 @@
 # UI layout: Agentic Resume Optimiser
 
-Status: **draft for review.** This covers screen layout, content and states for Phase 4 (UI). The visual style follows [`PLAN.md` §13](PLAN.md#13-look-and-feel-requirement): minimal, matching the [portfolio website](https://github.com/tmiharja/portfolio-website).
+Status: **reviewed. Decisions are recorded in §10.** This covers screen layout, content and states for Phase 4 (UI). The visual style follows [`PLAN.md` §13](PLAN.md#13-look-and-feel-requirement): minimal, matching the [portfolio website](https://github.com/tmiharja/portfolio-website).
 
-The wireframes in `docs/ui/` are rendered with the real design tokens, so colours, type and spacing are close to final. Copy is a first draft. Sample resume content is fictional.
+The wireframes live in [`mockups/`](mockups/) as PNG images plus the HTML they were rendered from, which you can open in a browser. They use the real design tokens, so colours, type and spacing are close to final. Copy is a first draft. Sample resume content is fictional.
 
 ---
 
 ## 1. Design principles
 
-1. **One column, lots of air.** Every screen uses the portfolio's centred 680px column with generous spacing between sections. There are no sidebars or multi-column dashboards.
-2. **Rules, not cards.** Sections are separated by whitespace, and lists by 1px hairlines. There are no shadows, gradients or decorative images.
+1. **One column, lots of air.** Every screen uses a single centred column with generous spacing between sections. It's 680px on the landing and progress screens, as on the portfolio, and 760px on the results page. There are no sidebars or multi-column dashboards.
+2. **Rules, not cards.** Sections are separated by whitespace, and lists by 1px hairlines. There are no shadows or decorative images. The one exception is the landing hero's background image, which works the same way as the portfolio's hero.
 3. **One accent colour.** Navy `#1f4e79` (light) / `#8fb4dc` (dark) marks everything interactive and all data: buttons, links, score ring, bars, matched keywords.
    - Amber is only for warnings and red only for errors.
    - Meaning is always carried by a text label as well as colour.
@@ -35,7 +35,7 @@ The first six tokens are copied verbatim from the portfolio. `warn` and `danger`
 
 | Element | Size and weight |
 |---|---|
-| Hero h1 | 40px (mobile) → 48px (≥ 640px), medium |
+| Hero h1 | 36px (mobile) → 48px (≥ 640px), medium |
 | Page h1 | 30–32px |
 | Section h2 | 24px semibold |
 | Body | 15px |
@@ -44,7 +44,7 @@ The first six tokens are copied verbatim from the portfolio. `warn` and `danger`
 | Micro-labels | 11–13px uppercase, letter-spaced |
 
 **Spacing**:
-- Column `max-width: 680px`, 24px side padding.
+- Column `max-width: 680px` (landing, progress, `/privacy`) or `760px` (results), with 24px side padding.
 - About 72px between sections.
 - About 16px vertical padding inside list rows.
 
@@ -54,14 +54,14 @@ The first six tokens are copied verbatim from the portfolio. `warn` and `danger`
 
 ## 3. Site shell
 
-The header and footer are the same on every screen.
+The header and footer are the same on every screen. Their inner width follows the page column: 680px, or 760px on results.
 
 - **Header** (mirrors the portfolio):
   - Left: the "Resume Optimiser" wordmark, which is also the home link.
   - Right: "How it works" (hidden below 640px), "Privacy" and the theme toggle.
-  - It starts transparent. Once the page scrolls it gets a frosted background and a hairline bottom rule.
+  - It starts transparent, sitting over the hero image on the landing screen. Once the page scrolls it gets a frosted background and a hairline bottom rule.
   - It includes a skip link to `#main`.
-- **Footer**: a hairline rule, then "Privacy", "Built by Toni Miharja" (links to the portfolio) and "© 2026" in 13px muted text.
+- **Footer**: a hairline rule, then "Privacy", "Built by **toninmotion**" (links to the portfolio) and "© 2026" in 13px muted text.
 - **Routes**:
   - `/`: the whole app flow. Upload, progress and results are **states of one page**, not separate routes.
   - `/privacy`: a plain long-form text page in the same column.
@@ -70,21 +70,31 @@ The header and footer are the same on every screen.
 
 ### 4.1 Upload (landing)
 
-![Upload screen](docs/ui/01-upload.png)
+![Upload screen](mockups/01-upload.png)
 
 | # | Element | Spec |
 |---|---|---|
 | 1 | Header | As in §3. |
-| 2 | Hero | h1 "Get your resume ready for Singapore recruiters." Lead (muted): "Upload a PDF. In about a minute you'll get a score, specific feedback and stronger bullet points. Free, no sign-up." No hero image. |
+| 2 | Hero copy | h1 "Get your resume ready for Singapore recruiters." Lead (muted): "Upload a PDF. In about a minute you'll get a score, specific feedback and stronger bullet points. Free, no sign-up." It sits at the bottom of the hero band, aligned to the 680px column. |
 | 3 | File drop zone | Dashed hairline box, about 140px tall. "Drop your resume here, or **browse files**". Helper: "PDF only · up to 4 MB · up to 4 pages". The whole zone is a `<button>` that opens a hidden `<input type="file" accept="application/pdf">`, and it also accepts drag-and-drop. Once a file is chosen it turns into a file row (icon, name, size, "Remove"). |
 | 4 | Job description | Label "Job description (optional)". Textarea, about 6 rows, placeholder "Paste the job ad here". Helper on the left ("Adds a match score and tailors the rewrites"); live counter on the right ("0 / 8,000"). The counter turns red over the limit. |
 | 5 | Primary action | "Analyse resume" in a solid accent button. Full width on mobile, auto width on desktop. Disabled until a valid file is chosen. "5 free analyses a day" sits next to it in muted text. |
 | 6 | Privacy notice | Below a hairline, 13px muted: "We don't store your resume. We keep anonymised stats (e.g. role type, seniority, scores) to improve the tool. Your resume is processed by Anthropic's Claude API and isn't used for training. **Privacy details**" (links to `/privacy`). |
 | 7 | How it works / What we score | Two short sections using the portfolio's two-column list pattern: a 140px label column plus text on desktop, stacked on mobile. They explain the three steps and the five scored dimensions. |
+| 8 | Hero image | A full-width band behind the header and hero copy, using **your background image** (the mockups show a striped placeholder). It works the same way as the portfolio hero:<br>• height `clamp(440px, 72svh, 780px)`;<br>• the bottom fades into the page background;<br>• optional soft glow overlay;<br>• separate light and dark variants.<br>It appears on the landing screen only. Progress and results have no hero, which keeps the focus on the content. |
+
+**Hero image: what's needed from you**
+- **Files**: one image for light mode and one for dark mode, like the portfolio's `hero-background-light.jpg` / `-dark.jpg`. A single image also works: dark mode then gets a darkening veil over it.
+- **Size**: at least 2400px wide, landscape, JPG. It gets cropped with `object-fit: cover`, so keep the subject away from the bottom third, where it fades out and the headline sits.
+- **Rights**: the image must be your own or licensed for web use.
+- **Implementation**:
+  - `next/image` with a blur placeholder;
+  - only the active theme's image loads (the hidden one is lazy-loaded), and the focal point is set per variant with `object-position`;
+  - the headline must keep AA contrast over the image, so the fade/veil strength will be tuned once the real image arrives.
 
 ### 4.2 Upload states
 
-![Upload states](docs/ui/02-upload-states.png)
+![Upload states](mockups/02-upload-states.png)
 
 | State | Trigger | Treatment |
 |---|---|---|
@@ -95,11 +105,11 @@ The header and footer are the same on every screen.
 | **E · Something went wrong** | Critical step failed, timeout or network drop | h1 "We couldn't finish the analysis", a line saying it's on our side, then "Try again" (primary) and "Start over" (link). |
 | **F · Partial result / empty sections** | Non-critical step failed, or no JD | Amber notice at the top of the results: "Some parts couldn't be completed…". Affected sections show a one-line muted empty state instead of disappearing. |
 
-The monthly-budget 503 uses the same layout as C: "We've reached this month's capacity. The tool will be back on 1 October."
+The state mockups show only the form area, with the hero omitted. The monthly-budget 503 uses the same layout as C: "We've reached this month's capacity. The tool will be back on 1 October."
 
 ### 4.3 Live progress
 
-![Progress screen](docs/ui/03-progress.png)
+![Progress screen](mockups/03-progress.png)
 
 | # | Element | Spec |
 |---|---|---|
@@ -123,9 +133,9 @@ Parsing covers two SSE steps, `parse` and `extract`. The stepper is an `aria-liv
 
 ### 4.4 Results dashboard
 
-![Results dashboard](docs/ui/04-results.png)
+![Results dashboard](mockups/04-results.png)
 
-Results replace the progress view in the same column. Focus moves to the results heading. Sections fade in one after another.
+Results replace the progress view, and **the column widens from 680px to 760px** (header, content and footer together, with a short width transition that's skipped under reduced motion). The extra width gives the bars, keyword chips and rewrites more room. Focus moves to the results heading. Sections fade in one after another.
 
 | # | Section | Spec |
 |---|---|---|
@@ -149,9 +159,9 @@ The verdict line comes from score bands defined in code, not the LLM:
 
 ### 4.5 Dark mode
 
-![Dark mode](docs/ui/05-dark.png)
+![Dark mode](mockups/05-dark.png)
 
-Dark mode uses the same layout with the portfolio's dark tokens. It follows `prefers-color-scheme` by default. The header toggle overrides this and saves the choice in `localStorage`, and an inline script in `<head>` prevents a flash of the wrong theme.
+Dark mode uses the same layout with the portfolio's dark tokens, and the landing hero switches to the dark image variant. It follows `prefers-color-scheme` by default. The header toggle overrides this and saves the choice in `localStorage`, and an inline script in `<head>` prevents a flash of the wrong theme.
 
 ---
 
@@ -161,7 +171,7 @@ Dark mode uses the same layout with the portfolio's dark tokens. It follows `pre
 |---|---|
 | < 640px (mobile, designed first) | Everything stacked. Full-width primary buttons. Score ring above the verdict. Dimension score beside the label, with the bar underneath. Rewrite copy button below the suggestion. "How it works" hidden from the header. |
 | ≥ 640px | Two-column list rows (140px label column). Ring beside the verdict. Dimension rows are label · bar · score. Auto-width buttons. The copy button sits to the right of the suggestion. |
-| ≥ 1024px | Nothing changes. The column stays at 680px (a deliberate choice for minimalism). |
+| ≥ 1024px | Nothing changes. The column stays at 680px, or 760px on results. This is deliberate, for minimalism. The hero image is always full-bleed. |
 
 ## 6. Copy for validation messages
 
@@ -189,8 +199,9 @@ Dark mode uses the same layout with the portfolio's dark tokens. It follows `pre
 
 ## 8. Motion
 
-Motion stays subtle, as on the portfolio:
-- Sections fade up 12px over 0.35 s ease-out, staggered by 50 ms.
+Motion stays subtle and **reuses the portfolio's `Reveal` component** (`framer-motion`), so the two sites move the same way:
+- Sections fade up 12px over 0.35 s ease-out when they scroll into view, staggered by 50 ms.
+- `useReducedMotion` renders content immediately, with no motion.
 - The active step marker pulses gently.
 - Bars and the ring fill once, over 0.6 s, on first render.
 
@@ -201,6 +212,8 @@ There is nothing else: no page transitions and no confetti.
 | UI element | Component (`src/components/`) | Notes |
 |---|---|---|
 | Header / footer / theme toggle | `site-header.tsx`, `site-footer.tsx`, `theme-toggle.tsx` | Ported from the portfolio pattern |
+| Hero band | `hero.tsx` | Light/dark `next/image` variants + fade (and optional glow), as in the portfolio `Hero` |
+| Fade-in wrapper | `reveal.tsx` | Copied from the portfolio `Reveal` (`framer-motion`) |
 | Drop zone + JD + button | `upload-form.tsx` | shadcn `Button`, `Textarea`, `Label` restyled |
 | Privacy text | `privacy-notice.tsx` | |
 | Stepper | `progress-stepper.tsx` | Driven by the `use-analysis` state machine |
@@ -212,12 +225,16 @@ There is nothing else: no page transitions and no confetti.
 | Rewrites | `rewrites-list.tsx` | Clipboard API with a fallback |
 | 429 / 503 / error screens | `rate-limit-notice.tsx`, `error-state.tsx` | |
 
-## 10. Open questions for review
+## 10. Decisions
 
-1. **Product name / wordmark**: "Resume Optimiser" is a placeholder. Do you have a preferred name? Should the header use your portfolio logo, or a text wordmark only?
-2. **Link back to the portfolio**: ★ a "Built by Toni Miharja" link in the footer. Or would you rather not link them?
-3. **Column width**: ★ keep 680px on every screen, as on the portfolio. The alternative is 760px for results only, which gives the bars a little more room.
-4. **Dimension chart**: ★ horizontal bars. They're easier to read and more minimal than a radar chart, which the brief also allowed.
-5. **Hero**: ★ typographic only. The alternative is a subtle background image like the portfolio's hero, which is heavier and less minimal.
-6. **Motion library**: ★ CSS-only animations (no `framer-motion`) to keep the bundle small. Or reuse the portfolio's `Reveal` component with `framer-motion` for exact parity?
-7. **Verdict wording**: are the band labels ("Needs work / Fair / Good / Strong") and the playful "A few fixes from strong." tone OK?
+| # | Topic | Decision |
+|---|---|---|
+| 1 | Product name / wordmark | **Resume Optimiser**, as a text wordmark in the header |
+| 2 | Footer credit | **"Built by toninmotion"**, linking to the portfolio website |
+| 3 | Column width | 680px on landing and progress. **Results widen to 760px** |
+| 4 | Dimension chart | Horizontal bars (no radar chart, no chart library) |
+| 5 | Hero | **Full-width background image** like the portfolio's (light + dark variants). **Waiting on the image from you**; a placeholder is used until then |
+| 6 | Motion | **Reuse the portfolio's `Reveal` component with `framer-motion`** |
+| 7 | Verdict wording | Confirmed: "Needs work / Fair / Good / Strong" plus a short line such as "A few fixes from strong." |
+
+**Still needed from you:** the hero image (light and dark variants, or one image). See §4.1 for the specs.
