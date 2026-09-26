@@ -20,7 +20,9 @@
     "fixtures": "tsx evals/generate-fixtures.mts",
     "eval": "tsx evals/run.mts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "vercel-build": "node scripts/vercel-build.mjs",
+    "check-env": "tsx scripts/check-env.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "4.0.63",
@@ -51,6 +53,7 @@
     "eslint-config-next": "16.3.6",
     "eslint-config-prettier": "10.1.8",
     "pdf-lib": "1.17.1",
+    "pg": "8.23.0",
     "prettier": "3.9.9",
     "prettier-plugin-tailwindcss": "0.8.1",
     "tailwindcss": "4.3.3",

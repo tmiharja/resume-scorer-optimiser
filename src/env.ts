@@ -34,14 +34,14 @@ const rawSchema = z.object({
   LLM_MOCK: flag,
 });
 
-/** Required in production only; dev and tests fall back to mocks / no-ops. */
-const PRODUCTION_REQUIRED = [
-  "ANTHROPIC_API_KEY",
-  "DATABASE_URL",
-  "IP_HASH_SALT",
-  "redisUrl",
-  "redisToken",
-] as const;
+/** Required in production only; dev and tests fall back to mocks / no-ops. Values are the names to set. */
+const PRODUCTION_REQUIRED = {
+  ANTHROPIC_API_KEY: "ANTHROPIC_API_KEY",
+  DATABASE_URL: "DATABASE_URL",
+  IP_HASH_SALT: "IP_HASH_SALT",
+  redisUrl: "UPSTASH_REDIS_REST_URL (or KV_REST_API_URL)",
+  redisToken: "UPSTASH_REDIS_REST_TOKEN (or KV_REST_API_TOKEN)",
+} as const;
 
 const envSchema = rawSchema
   .transform(
@@ -67,9 +67,9 @@ const envSchema = rawSchema
         message: "LLM_MOCK must not be enabled in production",
       });
     }
-    for (const key of PRODUCTION_REQUIRED) {
-      if (!env[key]) {
-        ctx.addIssue({ code: "custom", path: [key], message: `${key} is required in production` });
+    for (const [key, name] of Object.entries(PRODUCTION_REQUIRED)) {
+      if (!env[key as keyof typeof PRODUCTION_REQUIRED]) {
+        ctx.addIssue({ code: "custom", path: [], message: `${name} is required in production` });
       }
     }
   });
@@ -88,7 +88,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const result = envSchema.safeParse(cleaned);
   if (!result.success) {
     const problems = result.error.issues.map(
-      (i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`,
+      (i) => `  - ${i.path.length ? `${i.path.join(".")}: ` : ""}${i.message}`,
     );
     throw new Error(`Invalid environment configuration:\n${problems.join("\n")}`);
   }
