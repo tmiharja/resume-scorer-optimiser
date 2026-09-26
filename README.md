@@ -6,7 +6,7 @@ A free web app that scores a PDF resume and suggests improvements for the Singap
 - [`architecture.md`](architecture.md): solution architecture
 - [`ui-layout.md`](ui-layout.md) and [`mockups/`](mockups/): UI layout, decisions and wireframes
 
-> Status: Phase 1 (scaffold). The full setup and deploy guide arrives in Phase 6.
+> Status: Phase 2 (ingestion). The full setup and deploy guide arrives in Phase 6.
 
 ## Local development
 
@@ -29,4 +29,5 @@ npm run dev                  # http://localhost:3000
 | `npm run format` / `format:check` | Prettier (with Tailwind class sorting) |
 | `npm test` | Vitest unit tests (`tests/unit`) |
 | `npm run test:e2e` | Playwright e2e (`tests/e2e`) against a production build with `LLM_MOCK=1`; set `CHROMIUM_PATH` to use a local Chromium |
+| `npm run fixtures` | Regenerate the synthetic eval fixtures in `evals/fixtures/` (uses Chromium for one pair) |
 | `npm run check` | lint + typecheck + format check + unit tests |

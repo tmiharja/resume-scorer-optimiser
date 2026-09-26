@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run typecheck && npm run format:check && npm run test"
+    "check": "npm run lint && npm run typecheck && npm run format:check && npm run test",
+    "fixtures": "tsx evals/generate-fixtures.mts"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",
@@ -27,6 +28,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "3.7.0",
+    "unpdf": "1.8.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -38,9 +40,11 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.6",
     "eslint-config-prettier": "10.1.8",
+    "pdf-lib": "1.17.1",
     "prettier": "3.9.9",
     "prettier-plugin-tailwindcss": "0.8.1",
     "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
     "typescript": "6.0.3",
     "vitest": "5.0.2"
   }

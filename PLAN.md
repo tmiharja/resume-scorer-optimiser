@@ -428,6 +428,34 @@ Decisions made while scaffolding:
 - **Images**: `src/img/` holds static images, following the portfolio's convention. The hero images (`hero-background-light.jpg` / `-dark.jpg`) are still to be supplied.
 - **E2E**: runs against `next build && next start` with `LLM_MOCK=1`, on desktop and mobile (Pixel 7) projects. `CHROMIUM_PATH` points Playwright at a preinstalled browser.
 
+### Phase 2 status: done (ingestion)
+
+- **Code**:
+  - `src/ingest/`: `validate.ts` (size, `%PDF-` header, JD length), `pdf.ts` (pdf.js parsing via unpdf, in memory), `heuristics.ts` (hidden text, keyword stuffing, photo, page length), `sg-pii.ts` (checksum-validated NRIC/FIN plus SG personal-data hints), `errors.ts` (codes, HTTP statuses, user-facing copy from ui-layout.md §6).
+  - Schemas in `src/schemas/ingest.ts`.
+- **Route**: `POST /api/analyze` runs the guards (same-origin `Origin`, `Content-Length`), validation and ingest, and exports `maxDuration = 300`.
+  - Until Phase 3 it returns the ingest **summary** as JSON (page count, warnings, SG hints). It never returns the resume text.
+  - Phase 3 turns the success path into the SSE stream.
+- **Hidden-text detection works on pdf.js's operator list, not its text content**, which exposes no colour or render mode and silently drops off-page text.
+  - Each text-showing operator becomes a "run" with its fill brightness, opacity, render mode, effective size and position.
+  - Runs are aligned character by character to pdf.js text items, so hidden characters are removed from the text the LLM sees, and lines that were entirely hidden leave no gaps.
+  - Items that can't be aligned are treated as visible (fail-open), and the Extractor's injection check is the backstop.
+- **pdf.js 6 notes**: its eval-based font path (the CVE-2024-4367 vector) no longer exists, so there's no `isEvalSupported` flag to set. `verbosity: 0` keeps its warnings out of server logs.
+- **Thresholds** (`src/ingest/limits.ts`):
+  - tiny text: < 4 pt;
+  - white text: brightness ≥ 0.94;
+  - invisible: render mode 3/7 or fill opacity ≤ 0.1;
+  - photo: ≥ 60 pt image on page 1 with a portrait/square aspect ratio;
+  - keyword stuffing: a keyword block of ≥ 40 terms, or a term repeated ≥ 4 times across keyword lists;
+  - fewer than 200 visible characters → "scanned image" rejection;
+  - 4 pages → `page_count_long` warning.
+- **Fixtures**: `npm run fixtures` generates 10 synthetic resumes plus a clean twin of the injection resume, and two JDs, into `evals/fixtures/`.
+  - The injection pair is printed by Chromium so one fixture uses real-world font encoding. Its visible text is **identical** to its clean twin's.
+  - Expectations are added with the eval runner in Phase 3.
+- **Tests**:
+  - 69 unit tests: validation, every hidden-text technique, NRIC checksum and masking, SG hints, keyword stuffing, encrypted / image-only / corrupt / 5-page rejections, route guards, fixture regressions. The password-protected test PDF is generated with a hand-rolled RC4 security handler.
+  - 4 API e2e tests against the production build.
+
 ## 11. Open questions (defaults marked ★, used if you don't say otherwise)
 
 1. **Upload cap**: ★ **4 MB** (below Vercel's 4.5 MB body limit; resumes are rarely over 1 MB). The alternative, client-side upload to Vercel Blob with an immediate delete, breaks your "never blob" rule.
@@ -446,6 +474,7 @@ Decisions made while scaffolding:
 - No OCR: scanned PDFs are rejected.
 - Photo detection is a size heuristic, so a large logo can trigger it (worded as "possible photo").
 - Scores are LLM judgements and vary by a few points between runs. The evals use ranges.
+- Hidden-text alignment fails open: if a PDF's text items can't be matched to its drawing operators, the text is treated as visible and only the Extractor's injection check applies.
 - There's no automated check that ingest heuristics catch every trick, such as text hidden behind images, or font colour set through patterns or shading.
 
 ## 13. Look and feel (requirement)

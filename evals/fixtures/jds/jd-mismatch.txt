@@ -1,0 +1,15 @@
+Backend Software Engineer (Go / Kubernetes)
+
+We're hiring a backend engineer to build high-throughput payment APIs.
+
+Responsibilities
+- Design and build microservices in Go
+- Operate services on Kubernetes and AWS
+- Write automated tests and participate in on-call
+- Improve performance and reliability of PostgreSQL-backed systems
+
+Requirements
+- 3+ years of professional software engineering
+- Strong Go or Java, REST/gRPC API design
+- Experience with Kubernetes, Docker, CI/CD
+- Understanding of distributed systems and databases

@@ -1,0 +1,17 @@
+Senior Data Analyst — Regional E-commerce Platform (Singapore)
+
+About the role
+You will turn product and marketing data into insights that drive growth across Southeast Asia.
+
+What you'll do
+- Own dashboards and self-serve reporting in Tableau for product and marketing teams
+- Write complex SQL and Python to analyse customer behaviour and campaign performance
+- Design, run and analyse A/B tests
+- Build and maintain data models in dbt on BigQuery
+- Present findings to senior stakeholders
+
+What you'll bring
+- 4+ years in data analytics, ideally e-commerce
+- Strong SQL and Python; experience with Tableau or Looker
+- Experience with dbt, BigQuery and Airflow
+- Excellent communication skills
