@@ -24,6 +24,8 @@
 
 Everything runs in a single Next.js App Router app on Vercel. There's one streaming API route. The orchestrator is plain TypeScript and every LLM step is a typed function.
 
+For the full diagram and a description of each component, see [`architecture.md`](architecture.md).
+
 ```mermaid
 flowchart TD
   U[Browser: upload PDF + optional JD] -->|multipart POST| R[/api/analyze  runtime=nodejs  maxDuration=300/]
