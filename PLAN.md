@@ -530,3 +530,59 @@ The UI must be **minimalistic and match the portfolio site** ([tmiharja/portfoli
 - **Theme**: follows the system light/dark setting. A header toggle overrides it and is saved in `localStorage`, with no flash on load (same inline script pattern as the portfolio).
 - **Components**: shadcn/ui primitives are kept, but restyled to these tokens (card and shadow styles removed). The score ring and dimension bars are plain SVG/HTML, so **Recharts is dropped** from the dependency list. **`framer-motion` is added** for `Reveal`.
 
+
+## 14. Quality tuning plan (decided 2026-09-26)
+
+We don't fine-tune Claude. "Tuning" means improving the prompts, rubric, schema descriptions, deterministic rules and output limits, measured against evals. No user data is involved: resumes are never stored.
+
+**Decisions**
+- Toni will score **10–15 resumes** as gold labels for calibration.
+- **Tuning budget: US$15 cap** (a one-off development cost, separate from the $20/month runtime budget). The runner refuses to start a run that would exceed what's left.
+- **No model upgrade**: every production agent stays on Haiku 4.5. Sonnet 5 may be used only as the offline AI judge in evals, which is dev spend inside the $15 cap and never runs in production.
+
+**Targets**
+
+| Goal | Target |
+|---|---|
+| Rewrites failing the fact check | 0 (hard gate) |
+| Recall on must-flag items | ≥ 95% |
+| Score within ±10 of gold | ≥ 80% of gold cases |
+| Strong-vs-weak pair ordering | ≥ 95% |
+| Spread across repeat runs | ≤ ±5 points |
+| Injection vs clean twin | ≤ 10 points |
+| AI-judge feedback quality | ≥ 4 / 5 |
+| Cost / latency per analysis | ≤ $0.06 / ≤ 90 s |
+
+**Budget plan (≈ $14)**
+- ~36 synthetic resumes: the current 11, plus strong/weak pairs and more roles and seniority levels.
+- Split stratified: **train ≈ 60%** (outputs read to propose changes) and **test ≈ 40%** (scores only; they decide whether a change is kept).
+- Baseline × 2 reps (~$3.3) to measure noise, then up to 5 rounds × 1 rep (~$8), plus the Sonnet 5 judge on test cases only (~$2).
+- One change per round. Keep it only if test improves beyond noise and no guardrail regresses. Stop after 3 flat rounds or when the budget is spent.
+
+**Where tuning outputs live**
+
+```
+evals/
+├── fixtures/                     committed: synthetic PDFs + JDs
+│   └── manifest.json             committed: case list, tags, train/test split, strong/weak pairs
+├── gold/
+│   ├── gold-scores.csv           committed: Toni's scores (case, 5 dimensions, notes)
+│   └── README.md                 committed: scoring guide for the gold labels
+├── cases.ts                      committed: per-case assertions (existing)
+├── run.mts                       committed: runner (existing; gains --reps, --round, budget guard)
+├── judge.mts                     committed: AI-judge for feedback quality (Sonnet 5, evals only)
+├── tuning/
+│   ├── TUNING.md                 committed: round-by-round table (change, train, test, cost, kept?)
+│   ├── state.json                committed: split IDs, best round, spend to date vs the $15 cap
+│   └── rounds/vN/
+│       ├── change.md             committed: what changed, why, which train failures motivated it
+│       ├── summary.json          committed: aggregate metrics for train and test, with noise bands
+│       ├── results.jsonl         committed: per case × rep scores, flags, pass/fail, tokens, cost
+│       ├── judge.jsonl           committed: AI-judge grades per feedback item (test cases)
+│       └── outputs/              git-ignored: full per-case results (synthetic, but large)
+└── results/latest.json           git-ignored: last ad-hoc `npm run eval` (existing)
+```
+
+Each round's prompt/rubric change is its own git commit, and prompt and rubric versions are bumped (`RUBRIC_VERSION`, plus a new `PROMPT_VERSION`). So any round can be reproduced, and TUNING.md links each round to its commit.
+
+**Order**: Phase 4 (UI) and tuning can run in parallel, since tuning changes prompts, not the result format. Tuning needs a session that has `ANTHROPIC_API_KEY`.
