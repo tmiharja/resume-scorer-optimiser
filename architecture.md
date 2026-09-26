@@ -12,7 +12,7 @@ This document describes the target architecture. See [`PLAN.md`](PLAN.md) for ag
 
 | Zone | What runs there |
 |---|---|
-| **User's browser** | Next.js client UI (mobile-first): upload form, live progress stepper, results dashboard |
+| **User's browser** | Next.js client UI (mobile-first, minimal style matching the portfolio; see [`ui-layout.md`](ui-layout.md)): upload form, live progress stepper, results dashboard |
 | **Vercel** (`iad1`, Fluid Compute) | A single Next.js App Router app. `POST /api/analyze` runs on the Node runtime with `maxDuration = 300` s, the Hobby maximum |
 | **Upstash Redis** (`us-east-1`) | Sliding-window rate limiter and the monthly cost counter |
 | **Anthropic Claude API** | Every LLM step, called through the Vercel AI SDK (`@ai-sdk/anthropic`) |
@@ -67,7 +67,7 @@ The request goes through two phases:
 |---|---|---|
 | ① | **Upload form** | Takes the PDF resume and an optional JD. Checks type, size (≤ 4 MB) and JD length (≤ 8k chars) in the browser first. Shows the privacy notice. |
 | ② | **Live progress** | Stepper driven by SSE `step` events: Parsing → Critiquing (→ Matching JD) → Rewriting → Verifying, with elapsed time. The Matching JD step only appears when a JD was given. |
-| ③ | **Results dashboard** | Renders the final payload: overall score gauge, dimension bar/radar chart, JD match % with matched/missing keyword chips, feedback grouped by dimension and sorted by severity, original-vs-suggested bullets with a copy button, the red-flag warning card, and 429/error states. |
+| ③ | **Results dashboard** | Renders the final payload: overall score ring, dimension bars, JD match % with matched/missing keyword chips, feedback grouped by dimension and sorted by severity, original-vs-suggested bullets with a copy button, the red-flag warning card, and 429/error states. |
 
 ### Server: pre-stream checks
 
