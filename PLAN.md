@@ -355,6 +355,7 @@ Assumptions: a 2-page resume of about 1,500 tokens and a JD of about 1,500 token
 | `RATE_LIMIT_PER_DAY` | | 5 | |
 | `MONTHLY_BUDGET_USD` | | 18 | circuit breaker |
 | `LLM_MOCK` | | `0` | **startup fails** if `1` when `VERCEL_ENV=production` |
+| `NEXT_PUBLIC_PORTFOLIO_URL` | | — | where the "Built by toninmotion" footer credit links to. Without it the credit is plain text (`src/lib/site.ts`) |
 
 ---
 
@@ -406,6 +407,26 @@ Assumptions: a 2-page resume of about 1,500 tokens and a JD of about 1,500 token
 | 6 | README (Mermaid, setup, Vercel + Neon + Upstash, cost notes, checklist) | `docs: deployment guide and final checklist` |
 
 ---
+
+### Phase 1 status: done (scaffold)
+
+Pinned versions (all verified on npm on 2026-09-26):
+- **Framework**: next 16.3.6, react / react-dom 19.2.8 (the pair `create-next-app@16.3.6` generates), zod 4.6.5.
+- **Styling and motion**: tailwindcss 4.3.3, framer-motion 12.43.0 (same major as the portfolio, so `Reveal` ports unchanged), radix-ui 1.6.7, class-variance-authority 0.7.1, clsx 2.1.1, tailwind-merge 3.7.0.
+- **Tooling**: typescript 6.0.3, eslint 9.39.5 + eslint-config-next 16.3.6, prettier 3.9.9, vitest 5.0.2, @playwright/test 1.63.0.
+
+Decisions made while scaffolding:
+- **ESLint stays on 9.x**: `eslint-plugin-react` (pulled in by `eslint-config-next`) doesn't yet support ESLint 10.
+- **shadcn/ui is set up by hand** (`components.json`, `cn()`, and restyled `Button` / `Textarea` / `Label`), because the shadcn registry is unreachable from the build sandbox. The files match the CLI's format, so `npx shadcn add …` works later.
+  - Portfolio token names win where they clash: `muted` is a text colour and `accent` is the navy.
+  - The non-clashing shadcn names (`primary`, `border`, `input`, `ring`, `destructive`) are aliased to the portfolio tokens.
+- **Env validation**: `src/env.ts` exports a pure `parseEnv()` and a lazy `getEnv()`, so `next build` needs no secrets.
+  - "Production" means `VERCEL_ENV=production`, which lets local `next build`/`next start` and e2e run without real services.
+  - Model env vars must be keys of `src/llm/pricing.ts`, so every run's cost is always computable.
+- **Fluid Compute is a project setting, not a `vercel.json` key.** Enable it with `vercel project update --fluid-compute on` or in the dashboard; it's on by default for new projects. `vercel.json` only pins `regions: ["iad1"]`. The analysis route will export `maxDuration = 300` itself in Phase 3: a `functions` glob in `vercel.json` that matches nothing yet would fail the deploy.
+- **Theme toggle**: reads `<html class="dark">` via `useSyncExternalStore` instead of the portfolio's setState-in-effect, which React 19's lint rules reject. Behaviour is unchanged.
+- **Images**: `src/img/` holds static images, following the portfolio's convention. The hero images (`hero-background-light.jpg` / `-dark.jpg`) are still to be supplied.
+- **E2E**: runs against `next build && next start` with `LLM_MOCK=1`, on desktop and mobile (Pixel 7) projects. `CHROMIUM_PATH` points Playwright at a preinstalled browser.
 
 ## 11. Open questions (defaults marked ★, used if you don't say otherwise)
 
