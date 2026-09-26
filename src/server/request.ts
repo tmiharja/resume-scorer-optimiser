@@ -22,7 +22,8 @@ export function isBodyTooLarge(request: Request): boolean {
   return Number.isFinite(length) && length > MAX_REQUEST_BYTES;
 }
 
-export type ApiError = { error: { code: string; message: string } };
+/** JSON error body for non-streaming failures. `resetAt` (ISO) accompanies 429s. */
+export type ApiError = { error: { code: string; message: string; resetAt?: string } };
 
 export function errorResponse(status: number, code: string, message: string): Response {
   return Response.json({ error: { code, message } } satisfies ApiError, {

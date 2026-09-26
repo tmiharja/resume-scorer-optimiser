@@ -486,6 +486,38 @@ Decisions made while scaffolding:
   - `EVAL_MOCK=1` checks the plumbing without API calls. **The real-API run is pending**: the sandbox that built Phase 3 had no `ANTHROPIC_API_KEY`. Ranges and prompts may need one round of tuning after the first real run.
 - **Tests**: 105 unit tests (36 new for Phase 3: schema helpers, delimiter escaping, fact guard, scoring, `runAgent` retry/timeout, orchestrator happy path / parallelism / each partial failure / not-a-resume / cancellation / cost aggregation, SSE round-trip, streaming route) and 10 e2e tests, including the full streamed pipeline on the production build.
 
+### Phase 4 status: done (UI)
+
+- **Flow**: one page with four states, driven by `useAnalysis()` (`src/lib/use-analysis.ts`), which POSTs the upload and folds the SSE stream into state: landing/upload → live progress → results, or an error view. Components are in `src/components/analyzer/`.
+- **Landing**:
+  - full-bleed hero band like the portfolio's, showing a neutral placeholder until the images are wired into `src/img/hero.ts`;
+  - drag-and-drop or keyboard-operable drop zone with instant client checks that use the server's messages (the server re-checks everything);
+  - JD box with a live counter, and the privacy notice.
+- **Progress**: stepper (Parsing → Critiquing ‖ Matching JD → Rewriting → Verifying), elapsed timer, the hidden-text warning as soon as parsing finishes, and Cancel.
+- **Results**:
+  - the column widens to 760px via a CSS variable, so header, content and footer move together;
+  - score ring (the page's one hero figure) and dimension bars following the dataviz mark specs (4px rounded data ends, same-hue track, every value also printed);
+  - job match with keyword chips, priorities and gaps;
+  - feedback accordion with the weakest dimension open, severity labels and bullet citations;
+  - rewrites with `[X%]` placeholders highlighted, copy buttons, an "Unverified" badge when the Verifier failed, and a count of dropped rewrites.
+- **States**:
+  - validation errors inline (client or server 4xx);
+  - 429 daily limit with a local reset time. The UI is ready; the server side lands in Phase 5 as `{ error: { code: "rate_limited", message, resetAt } }`;
+  - 503;
+  - not-a-resume, and "couldn't finish" with retry;
+  - partial-result notices.
+- **Accessibility**: focus moves to the new heading on each state change; live regions for step changes and copy; labelled inputs; severity shown as text, not colour; reduced motion respected; print styles force fade-ins visible.
+- **Tests**: 9 new browser e2e tests:
+  - the full flow with a JD (focus, dimension bars, job match, cited feedback, copy);
+  - the hidden-text warning;
+  - non-PDF and oversize files rejected in the browser, and a fake `.pdf` rejected by the server;
+  - the 429 notice;
+  - not a resume;
+  - cancel;
+  - the keyboard drop zone.
+
+  The suite is 27 passing, with 5 desktop-only skips.
+
 ## 11. Open questions (defaults marked ★, used if you don't say otherwise)
 
 1. **Upload cap**: ★ **4 MB** (below Vercel's 4.5 MB body limit; resumes are rarely over 1 MB). The alternative, client-side upload to Vercel Blob with an immediate delete, breaks your "never blob" rule.

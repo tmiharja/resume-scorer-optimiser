@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { cn } from "@/lib/utils";
 import HeaderShell from "./header-shell";
-import { type PageWidth, widthClass } from "./layout-width";
 import ThemeToggle from "./theme-toggle";
 
-export default function SiteHeader({ width = "page" }: { width?: PageWidth }) {
+export default function SiteHeader() {
   return (
     <HeaderShell>
-      <div className={cn("site-header__inner mx-auto w-full px-6", widthClass[width])}>
+      <div className="site-header__inner page-col">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-10 focus:bg-background focus:px-3 focus:py-2"
