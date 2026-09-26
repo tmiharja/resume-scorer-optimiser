@@ -6,7 +6,7 @@ A free web app that scores a PDF resume and suggests improvements for the Singap
 - [`architecture.md`](architecture.md): solution architecture
 - [`ui-layout.md`](ui-layout.md) and [`mockups/`](mockups/): UI layout, decisions and wireframes
 
-> Status: Phase 3 (agent pipeline). The full setup and deploy guide arrives in Phase 6.
+> Status: Phase 4 (UI). Run `LLM_MOCK=1 npm run dev` to try the full flow without an API key. The full setup and deploy guide arrives in Phase 6.
 
 ## Local development
 
