@@ -518,6 +518,25 @@ Decisions made while scaffolding:
 
   The suite is 27 passing, with 5 desktop-only skips.
 
+### Phase 5 status: done (persistence and hardening)
+
+- **Analytics** (Neon + Drizzle):
+  - `src/db/schema.ts` defines the `analyses` table exactly as in §7. The 6 categorical columns are Postgres enums, and CHECK constraints cover scores, page count and the rubric-version format. The migration is `drizzle/0000_init_analyses.sql` (`npm run db:generate` / `npm run db:migrate`).
+  - `src/server/analytics.ts` builds the row through a `.strict()` Zod allowlist; any other key, or free text in an enum field, throws. Unit tests run a real pipeline over a resume and assert that no resume/JD string appears in the row **or** in the SQL parameters Drizzle generates.
+  - The insert is a no-op without `DATABASE_URL`, and its failures are logged by error class only. Rows are written for success, partial, rejected (not a resume) and error runs; 4xx rejections before the LLM runs aren't recorded.
+- **Rate limiting** (`src/server/ratelimit.ts`):
+  - Upstash sliding window of `RATE_LIMIT_PER_DAY` (5) per 24 h, keyed by `HMAC-SHA256(IP_HASH_SALT, ip)`, with Upstash analytics off. The raw IP is never stored or logged.
+  - It's checked **after** validation and ingest, so rejected files don't use quota.
+  - On a limit: 429 with `{ code: "rate_limited", message, resetAt }` and `Retry-After`. The UI shows the server's message and the local reset time.
+- **Budget breaker** (`src/server/budget.ts`):
+  - Each run's real cost is added to a per-month Redis counter.
+  - At `MONTHLY_BUDGET_USD` (18), requests get `503 capacity_reached` ("back on 1 October").
+  - Verified in the real Next.js runtime: with a $0.001 budget, the second request is refused.
+- **Failure policy**: if Redis is unreachable the route **fails closed** (503), since an unmetered public LLM endpoint is the costlier failure. Locally (no Redis env) both guards use in-memory stores.
+- **After-response bookkeeping**: `after()` is registered in the request scope and resolves with the run summary when the stream ends. It records spend and then the analytics row, so neither can delay or break the user's result.
+- **Privacy page**: full notice covering in-memory processing, US processing by Anthropic's API (a PDPA transfer disclosure), the exact analytics fields, the salted-hash rate limiting, and no tracking cookies.
+- **Tests**: 15 new unit tests (analytics allowlist and SQL, IP hashing, sliding window, budget, route 429 / no quota for rejects / 503 capacity / spend recorded). Unit total 120; e2e 27 passing (the e2e server runs with a high limit because the suite runs many analyses from one IP).
+
 ## 11. Open questions (defaults marked ★, used if you don't say otherwise)
 
 1. **Upload cap**: ★ **4 MB** (below Vercel's 4.5 MB body limit; resumes are rarely over 1 MB). The alternative, client-side upload to Vercel Blob with an immediate delete, breaks your "never blob" rule.

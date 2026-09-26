@@ -114,7 +114,7 @@ test.describe("analyse flow", () => {
         status: 429,
         contentType: "application/json",
         body: JSON.stringify({
-          error: { code: "rate_limited", message: "Daily limit reached.", resetAt },
+          error: { code: "rate_limited", message: "You've used today's 5 free analyses.", resetAt },
         }),
       }),
     );

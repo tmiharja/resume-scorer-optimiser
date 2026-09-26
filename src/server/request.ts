@@ -25,9 +25,17 @@ export function isBodyTooLarge(request: Request): boolean {
 /** JSON error body for non-streaming failures. `resetAt` (ISO) accompanies 429s. */
 export type ApiError = { error: { code: string; message: string; resetAt?: string } };
 
-export function errorResponse(status: number, code: string, message: string): Response {
-  return Response.json({ error: { code, message } } satisfies ApiError, {
-    status,
-    headers: { "cache-control": "no-store" },
-  });
+export function errorResponse(
+  status: number,
+  code: string,
+  message: string,
+  resetAt?: string,
+): Response {
+  return Response.json(
+    { error: { code, message, ...(resetAt ? { resetAt } : {}) } } satisfies ApiError,
+    {
+      status,
+      headers: { "cache-control": "no-store" },
+    },
+  );
 }
