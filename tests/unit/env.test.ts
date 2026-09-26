@@ -62,7 +62,12 @@ describe("parseEnv", () => {
     } catch (e) {
       message = (e as Error).message;
     }
-    for (const key of ["DATABASE_URL", "IP_HASH_SALT", "redisUrl", "redisToken"]) {
+    for (const key of [
+      "DATABASE_URL",
+      "IP_HASH_SALT",
+      "UPSTASH_REDIS_REST_URL (or KV_REST_API_URL)",
+      "UPSTASH_REDIS_REST_TOKEN (or KV_REST_API_TOKEN)",
+    ]) {
       expect(message).toContain(key);
     }
     expect(message).not.toContain("sk-ant-secret");

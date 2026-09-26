@@ -537,6 +537,20 @@ Decisions made while scaffolding:
 - **Privacy page**: full notice covering in-memory processing, US processing by Anthropic's API (a PDPA transfer disclosure), the exact analytics fields, the salted-hash rate limiting, and no tracking cookies.
 - **Tests**: 15 new unit tests (analytics allowlist and SQL, IP hashing, sliding window, budget, route 429 / no quota for rejects / 503 capacity / spend recorded). Unit total 120; e2e 27 passing (the e2e server runs with a high limit because the suite runs many analyses from one IP).
 
+### Phase 6 status: done (deploy readiness)
+
+- **README**: the architecture diagram (Mermaid), local setup (including the mock mode that needs no key), an env var table, tests and evals, swapping models, cost notes including the **Anthropic Console spend limit**, the step-by-step Vercel + Neon + Upstash deploy, troubleshooting and the final checklist.
+- **Build pipeline** (`vercel.json` → `npm run vercel-build` → `scripts/vercel-build.mjs`):
+  1. `scripts/check-env.ts` validates the env with the app's own schema and fails the deploy with the **names** of missing variables (e.g. "UPSTASH_REDIS_REST_URL (or KV_REST_API_URL) is required in production"). It never prints values.
+  2. `drizzle-kit migrate` runs whenever a database is connected, using `DATABASE_URL_UNPOOLED` (direct) when present. Migrations are idempotent.
+  3. `next build`.
+  - Locally, `npm run build` is still plain `next build`.
+- **Migrations**: drizzle-kit needs `pg` for a plain Postgres URL, so `pg` is a devDependency; the app itself keeps Neon's HTTP driver. Verified against a throwaway Postgres 16:
+  - the migration applies, and re-running it is a no-op;
+  - an app-built analytics row inserts;
+  - the CHECK constraints and enums reject out-of-range scores, free-text enum values, a 5-page count and a malformed rubric version.
+- **Still needs you**: create the accounts and follow the README deploy steps; add the hero images; set `NEXT_PUBLIC_PORTFOLIO_URL`; run the real-API evals and tuning (§14) in a session that has the key.
+
 ## 11. Open questions (defaults marked ★, used if you don't say otherwise)
 
 1. **Upload cap**: ★ **4 MB** (below Vercel's 4.5 MB body limit; resumes are rarely over 1 MB). The alternative, client-side upload to Vercel Blob with an immediate delete, breaks your "never blob" rule.
