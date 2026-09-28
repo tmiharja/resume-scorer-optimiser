@@ -1,3 +1,4 @@
+import { APICallError } from "ai";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { checkRewrite, placeholdersIn } from "@/agents/fact-guard";
@@ -228,6 +229,58 @@ describe("runAgent", () => {
     expect(error.message).not.toContain("{}");
   });
 
+  it("doesn't retry output cut off at the token cap, and says why", async () => {
+    const { models, calls } = fakeModels({
+      critic: { raw: '{"answer": "Alex Tan, Sen', finish: "length" },
+    });
+    const error = await runAgent({
+      agent: "critic",
+      model: models.critic,
+      instructions: "x",
+      prompt: "hi",
+      schema,
+      timeoutMs: 1000,
+      maxOutputTokens: 100,
+    }).catch((e) => e);
+    expect(error).toBeInstanceOf(AgentError);
+    expect(error.code).toBe("schema");
+    expect(calls).toHaveLength(1);
+    expect(error.detail).toBe("output reached the 100-token limit");
+    expect(error.usage.outputTokens).toBe(200);
+  });
+
+  it("reports the API's status and error type, but nothing from the request", async () => {
+    const apiError = new APICallError({
+      message: "Your credit balance is too low",
+      url: "https://api.anthropic.com/v1/messages",
+      requestBodyValues: { prompt: "Alex Tan resume text" },
+      statusCode: 400,
+      responseBody: JSON.stringify({
+        type: "error",
+        error: {
+          type: "invalid_request_error",
+          message: "Your credit balance is too low to access the Anthropic API.",
+        },
+      }),
+      isRetryable: false,
+    });
+    const { models } = fakeModels({ critic: { error: apiError } });
+    const error = await runAgent({
+      agent: "critic",
+      model: models.critic,
+      instructions: "x",
+      prompt: "Alex Tan resume text",
+      schema,
+      timeoutMs: 1000,
+      maxOutputTokens: 100,
+    }).catch((e) => e);
+    expect(error.code).toBe("api");
+    expect(error.detail).toBe(
+      "400 invalid_request_error: Your credit balance is too low to access the Anthropic API.",
+    );
+    expect(error.detail).not.toContain("Alex Tan");
+  });
+
   it("times out", async () => {
     const { models } = fakeModels({ critic: { hang: true } });
     const error = await runAgent({
@@ -241,5 +294,6 @@ describe("runAgent", () => {
     }).catch((e) => e);
     expect(error).toBeInstanceOf(AgentError);
     expect(error.code).toBe("timeout");
+    expect(error.detail).toBe("no reply within 50 ms");
   });
 });

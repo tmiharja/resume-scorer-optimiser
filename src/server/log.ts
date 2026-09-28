@@ -26,7 +26,14 @@ export function logAnalysis(meta: PipelineMeta): void {
     steps: Object.fromEntries(
       Object.entries(meta.steps).map(([agent, s]) => [
         agent,
-        { ok: s.ok, ms: s.ms, attempts: s.attempts, costUsd: Number(s.costUsd.toFixed(6)) },
+        {
+          ok: s.ok,
+          ms: s.ms,
+          attempts: s.attempts,
+          costUsd: Number(s.costUsd.toFixed(6)),
+          // Failure reason from AgentError.detail: status/type or a fixed phrase.
+          ...(s.error ? { error: s.error } : {}),
+        },
       ]),
     ),
   };

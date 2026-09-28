@@ -50,7 +50,7 @@ export async function runRewriter(
     ].join("\n\n"),
     schema: rewriteOutput,
     timeoutMs: 60_000,
-    maxOutputTokens: 2000,
+    maxOutputTokens: 4000,
     signal,
   });
   // Keep only rewrites of bullets that were actually selected, once each.
