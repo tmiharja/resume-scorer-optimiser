@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { databaseUrl } from "@/db/url";
 import { DEFAULT_MODEL, MODEL_IDS } from "@/llm/pricing";
 
 const model = z.enum(MODEL_IDS).default(DEFAULT_MODEL);
@@ -20,6 +21,9 @@ const rawSchema = z.object({
   MODEL_VERIFIER: model,
 
   DATABASE_URL: optionalUrl,
+  // Names from connecting Neon with the prefix NEON (see src/db/url.ts).
+  NEON_URL: optionalUrl,
+  NEON_DATABASE_URL: optionalUrl,
 
   UPSTASH_REDIS_REST_URL: optionalUrl,
   UPSTASH_REDIS_REST_TOKEN: optionalString,
@@ -37,7 +41,7 @@ const rawSchema = z.object({
 /** Required in production only; dev and tests fall back to mocks / no-ops. Values are the names to set. */
 const PRODUCTION_REQUIRED = {
   ANTHROPIC_API_KEY: "ANTHROPIC_API_KEY",
-  DATABASE_URL: "DATABASE_URL",
+  DATABASE_URL: "DATABASE_URL (or NEON_URL, from connecting Neon with the prefix NEON)",
   IP_HASH_SALT: "IP_HASH_SALT",
   redisUrl: "UPSTASH_REDIS_REST_URL (or KV_REST_API_URL)",
   redisToken: "UPSTASH_REDIS_REST_TOKEN (or KV_REST_API_TOKEN)",
@@ -50,9 +54,13 @@ const envSchema = rawSchema
       UPSTASH_REDIS_REST_TOKEN,
       KV_REST_API_URL,
       KV_REST_API_TOKEN,
+      DATABASE_URL,
+      NEON_URL,
+      NEON_DATABASE_URL,
       ...rest
     }) => ({
       ...rest,
+      DATABASE_URL: databaseUrl({ NEON_URL, NEON_DATABASE_URL, DATABASE_URL }),
       redisUrl: UPSTASH_REDIS_REST_URL ?? KV_REST_API_URL,
       redisToken: UPSTASH_REDIS_REST_TOKEN ?? KV_REST_API_TOKEN,
       isProduction: rest.VERCEL_ENV === "production",

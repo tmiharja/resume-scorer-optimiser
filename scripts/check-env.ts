@@ -1,7 +1,7 @@
 /**
  * Fails the build when a production deployment is misconfigured, listing the
  * missing or invalid variable names (never their values). Run by
- * scripts/vercel-build.mjs before `next build`.
+ * scripts/vercel-build.ts before `next build`.
  */
 import { parseEnv } from "../src/env";
 

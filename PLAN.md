@@ -540,9 +540,10 @@ Decisions made while scaffolding:
 ### Phase 6 status: done (deploy readiness)
 
 - **README**: the architecture diagram (Mermaid), local setup (including the mock mode that needs no key), an env var table, tests and evals, swapping models, cost notes including the **Anthropic Console spend limit**, the step-by-step Vercel + Neon + Upstash deploy, troubleshooting and the final checklist.
-- **Build pipeline** (`vercel.json` → `npm run vercel-build` → `scripts/vercel-build.mjs`):
+- **Build pipeline** (`vercel.json` → `npm run vercel-build` → `scripts/vercel-build.ts`):
   1. `scripts/check-env.ts` validates the env with the app's own schema and fails the deploy with the **names** of missing variables (e.g. "UPSTASH_REDIS_REST_URL (or KV_REST_API_URL) is required in production"). It never prints values.
-  2. `drizzle-kit migrate` runs whenever a database is connected, using `DATABASE_URL_UNPOOLED` (direct) when present. Migrations are idempotent.
+  2. `drizzle-kit migrate` runs whenever a database is connected, using the direct (unpooled) URL when present. Migrations are idempotent.
+  - Database variable names are resolved in one place, `src/db/url.ts`: `DATABASE_URL` from Neon's default prefix, or `NEON_URL` / `NEON_DATABASE_URL` when Neon is connected with the prefix `NEON` (needed when the project already has a `DATABASE_URL`). The NEON_* names win.
   3. `next build`.
   - Locally, `npm run build` is still plain `next build`.
 - **Migrations**: drizzle-kit needs `pg` for a plain Postgres URL, so `pg` is a devDependency; the app itself keeps Neon's HTTP driver. Verified against a throwaway Postgres 16:

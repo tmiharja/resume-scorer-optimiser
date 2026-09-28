@@ -21,7 +21,7 @@
     "eval": "tsx evals/run.mts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "vercel-build": "node scripts/vercel-build.mjs",
+    "vercel-build": "tsx scripts/vercel-build.ts",
     "check-env": "tsx scripts/check-env.ts"
   },
   "dependencies": {
