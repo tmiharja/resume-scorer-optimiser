@@ -18,8 +18,12 @@ const DIMENSIONS = [
   ["SG conventions", "No photo, NRIC, age or salary; consistent British spelling"],
 ] as const;
 
-// Display only; the server enforces the real limit (Phase 5).
-const DAILY_LIMIT = Number(process.env.RATE_LIMIT_PER_DAY) || 5;
+// Display only; the server enforces the real limit (src/env.ts). 0 = no limit.
+const configuredLimit = Number(process.env.RATE_LIMIT_PER_DAY ?? "5");
+const DAILY_LIMIT =
+  process.env.RATE_LIMIT_PER_DAY && Number.isInteger(configuredLimit) && configuredLimit >= 0
+    ? configuredLimit
+    : 5;
 
 function Landing() {
   return (

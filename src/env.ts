@@ -32,7 +32,8 @@ const rawSchema = z.object({
   KV_REST_API_TOKEN: optionalString,
 
   IP_HASH_SALT: z.string().min(32, "IP_HASH_SALT must be at least 32 characters").optional(),
-  RATE_LIMIT_PER_DAY: z.coerce.number().int().min(1).max(1000).default(5),
+  // 0 turns the per-visitor limit off (e.g. while testing); the monthly budget still applies.
+  RATE_LIMIT_PER_DAY: z.coerce.number().int().min(0).max(1000).default(5),
   MONTHLY_BUDGET_USD: z.coerce.number().positive().max(1000).default(18),
 
   LLM_MOCK: flag,

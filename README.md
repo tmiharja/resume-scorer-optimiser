@@ -84,7 +84,7 @@ Set them in `.env.local` for development, and in **Vercel → Project → Settin
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | ✓ | — | Or `KV_REST_API_URL` / `KV_REST_API_TOKEN`, as set by the **Upstash** integration |
 | `IP_HASH_SALT` | ✓ | — | Random secret, ≥ 32 characters: `openssl rand -hex 32` |
 | `MODEL_EXTRACTOR` … `MODEL_VERIFIER` | | `claude-haiku-4-5` | Per-agent model; see [Swapping models](#swapping-models) |
-| `RATE_LIMIT_PER_DAY` | | `5` | Analyses per visitor per 24 h |
+| `RATE_LIMIT_PER_DAY` | | `5` | Analyses per visitor per 24 h. `0` turns the limit off (e.g. while testing); the monthly budget still applies. Redeploy after changing it |
 | `MONTHLY_BUDGET_USD` | | `18` | Spend at which new analyses pause until the 1st (UTC) |
 | `NEXT_PUBLIC_PORTFOLIO_URL` | | — | Makes the "Built by toninmotion" footer credit a link |
 | `LLM_MOCK` | never | `0` | `1` = mocked LLM for tests / offline dev; **rejected in production** |

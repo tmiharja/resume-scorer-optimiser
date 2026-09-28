@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { POST } from "@/app/api/analyze/route";
-import { getEnv } from "@/env";
+import { getEnv, parseEnv } from "@/env";
 import { readEvents } from "@/lib/sse";
 import { capacityMessage, memoryBudget, monthKey, nextMonthStart } from "@/server/budget";
 import { getGuards, resetGuardsForTests } from "@/server/guards";
@@ -39,6 +39,19 @@ describe("memory sliding window", () => {
     expect((await limiter.limit("other")).success).toBe(true);
     now = 1_000_000 + WINDOW_MS + 1;
     expect((await limiter.limit("k")).success).toBe(true);
+  });
+});
+
+describe("RATE_LIMIT_PER_DAY=0", () => {
+  afterEach(() => resetGuardsForTests());
+
+  it("turns the per-visitor limit off but keeps the monthly budget", async () => {
+    const guards = getGuards(parseEnv({ RATE_LIMIT_PER_DAY: "0" }));
+    for (let i = 0; i < 20; i++) {
+      expect((await guards.limiter.limit("same-visitor")).success).toBe(true);
+    }
+    await guards.budget.add(monthKey(), 1.5);
+    expect(await guards.budget.spent(monthKey())).toBe(1.5);
   });
 });
 
