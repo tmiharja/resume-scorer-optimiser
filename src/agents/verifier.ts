@@ -40,7 +40,7 @@ export async function runVerifier(
     ].join("\n\n"),
     schema: verifyOutput,
     timeoutMs: 45_000,
-    maxOutputTokens: 1500,
+    maxOutputTokens: 3000,
     signal,
   });
 }

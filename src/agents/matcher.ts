@@ -22,7 +22,7 @@ export async function runMatcher(
     ].join("\n\n"),
     schema: matchOutput,
     timeoutMs: 45_000,
-    maxOutputTokens: 1500,
+    maxOutputTokens: 3000,
     signal,
   });
 }

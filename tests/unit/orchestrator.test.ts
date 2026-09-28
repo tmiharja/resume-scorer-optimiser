@@ -177,6 +177,18 @@ describe("runPipeline", () => {
     expect(outcome.meta.status).toBe("error");
   });
 
+  it("records why the Extractor failed in the run summary", async () => {
+    const { outcome } = await run({
+      extractor: { raw: '{"isResume": true, "summary": "Alex Tan', finish: "length" },
+    });
+    expect(outcome.kind === "error" && outcome.code).toBe("extract_failed");
+    expect(outcome.meta.steps.extractor).toMatchObject({
+      ok: false,
+      error: "output reached the 8000-token limit",
+    });
+    expect(JSON.stringify(outcome.meta.steps)).not.toContain("Alex Tan");
+  });
+
   it("stops after the Extractor when the document isn't a resume", async () => {
     const { outcome, calls, events } = await run({
       extractor: { ...MOCK_OUTPUTS.extractor, isResume: false, notResumeReason: "It is a recipe." },

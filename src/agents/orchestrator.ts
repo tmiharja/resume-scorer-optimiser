@@ -40,7 +40,15 @@ export type PipelineDeps = {
   signal?: AbortSignal;
 };
 
-type StepRecord = { ok: boolean; ms: number; attempts: number; usage: TokenUsage; costUsd: number };
+type StepRecord = {
+  ok: boolean;
+  ms: number;
+  attempts: number;
+  usage: TokenUsage;
+  costUsd: number;
+  /** Why a failed step failed (AgentError.detail); for logs only. */
+  error?: string;
+};
 
 /** Server-side run summary for logging and analytics. Contains no resume content. */
 export type PipelineMeta = {
@@ -148,12 +156,14 @@ export async function runPipeline(
       return run;
     } catch (error) {
       const usage = error instanceof AgentError ? error.usage : ZERO;
+      const detail = error instanceof AgentError ? error.detail : undefined;
       steps[agent] = {
         ok: false,
         ms: Date.now() - began,
         attempts: 0,
         usage,
         costUsd: costUsd(models[agent].id, usage),
+        ...(detail ? { error: detail } : {}),
       };
       emit({
         type: "step",

@@ -2,8 +2,12 @@ import { MockLanguageModelV4 } from "ai/test";
 import { MOCK_OUTPUTS } from "@/llm/mock";
 import type { Agent, AgentModels } from "@/llm/models";
 
-/** What a fake agent returns: JSON, raw text (e.g. invalid JSON), or an error. */
-export type FakeReply = object | { raw: string } | { error: Error } | { hang: true };
+/**
+ * What a fake agent returns: JSON, raw text (e.g. invalid JSON, or output cut
+ * off at the token cap with `finish: "length"`), or an error.
+ */
+export type FakeReply =
+  object | { raw: string; finish?: "length" } | { error: Error } | { hang: true };
 
 export type FakeScript = Partial<Record<Agent, FakeReply | FakeReply[]>>;
 
@@ -70,9 +74,12 @@ export function fakeModels(script: FakeScript = {}, delayMs = 5) {
         calls.push({ agent, system, prompt: user, start, end: Date.now() });
         if ("error" in reply) throw reply.error;
         const text = "raw" in reply ? reply.raw : JSON.stringify(reply);
+        const cutOff = "finish" in reply && reply.finish === "length";
         return {
           content: [{ type: "text", text }],
-          finishReason: { unified: "stop", raw: "end_turn" },
+          finishReason: cutOff
+            ? { unified: "length", raw: "max_tokens" }
+            : { unified: "stop", raw: "end_turn" },
           usage: {
             inputTokens: { total: 1000, noCache: 1000, cacheRead: 0, cacheWrite: 0 },
             outputTokens: { total: 200, text: 200, reasoning: undefined },

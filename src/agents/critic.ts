@@ -62,7 +62,7 @@ export async function runCritic(
     ].join("\n\n"),
     schema: critiqueOutput,
     timeoutMs: 60_000,
-    maxOutputTokens: 3000,
+    maxOutputTokens: 6000,
     signal,
   });
   return { ...run, output: sanitise(run.output, resume) };

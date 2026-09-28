@@ -46,8 +46,8 @@ export async function runExtractor(
       wrapUntrusted("resume_text", ingest.visibleText),
     ].join("\n\n"),
     schema: extractorOutput,
-    timeoutMs: 60_000,
-    maxOutputTokens: 4000,
+    timeoutMs: 90_000,
+    maxOutputTokens: 8000,
     signal,
   });
   return { ...run, output: toStructuredResume(run.output, ingest) };

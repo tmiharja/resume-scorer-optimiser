@@ -1,4 +1,11 @@
-import { NoObjectGeneratedError, NoOutputGeneratedError, Output, generateText } from "ai";
+import {
+  APICallError,
+  NoObjectGeneratedError,
+  NoOutputGeneratedError,
+  Output,
+  RetryError,
+  generateText,
+} from "ai";
 import type { z } from "zod";
 import type { Agent, AgentModel } from "@/llm/models";
 import { type ModelId, type TokenUsage, costUsd } from "@/llm/pricing";
@@ -11,14 +18,48 @@ export class AgentError extends Error {
   readonly agent: Agent;
   readonly code: AgentErrorCode;
   readonly usage: TokenUsage;
+  /** Loggable reason (see failureDetail); never contains resume content. */
+  readonly detail: string | undefined;
 
-  constructor(agent: Agent, code: AgentErrorCode, usage: TokenUsage, cause?: unknown) {
+  constructor(
+    agent: Agent,
+    code: AgentErrorCode,
+    usage: TokenUsage,
+    cause?: unknown,
+    detail?: string,
+  ) {
     super(`${agent} failed: ${code}`, { cause });
     this.name = "AgentError";
     this.agent = agent;
     this.code = code;
     this.usage = usage;
+    this.detail = detail;
   }
+}
+
+/**
+ * A short, loggable reason for an API failure: the HTTP status plus the error
+ * type and message from Anthropic's error body (e.g. "400 invalid_request_error:
+ * Your credit balance is too low…"). Those messages describe the request's
+ * problem, not its content; the message is still cut short, and nothing else
+ * from the request or response is kept.
+ */
+export function failureDetail(error: unknown): string | undefined {
+  const last = RetryError.isInstance(error) ? error.lastError : error;
+  if (!APICallError.isInstance(last)) return undefined;
+  let type = "";
+  let message = "";
+  try {
+    const body = JSON.parse(last.responseBody ?? "") as {
+      error?: { type?: unknown; message?: unknown };
+    };
+    if (typeof body.error?.type === "string") type = body.error.type;
+    if (typeof body.error?.message === "string") message = body.error.message;
+  } catch {
+    // Not a JSON error body (e.g. a gateway page): the status alone will do.
+  }
+  const status = last.statusCode ?? "network";
+  return [`${status}${type ? ` ${type}` : ""}`, message.slice(0, 160)].filter(Boolean).join(": ");
 }
 
 export type AgentRun<T> = {
@@ -137,16 +178,34 @@ export async function runAgent<S extends z.ZodType>(
     } catch (error) {
       if (NoObjectGeneratedError.isInstance(error)) {
         usage = addUsage(usage, toUsage(error.usage));
+        if (error.finishReason === "length") {
+          // Cut off at the output cap: a repair attempt would hit the same cap.
+          throw new AgentError(
+            opts.agent,
+            "schema",
+            usage,
+            error,
+            `output reached the ${opts.maxOutputTokens}-token limit`,
+          );
+        }
         if (!repair) continue; // one schema-repair retry
-        throw new AgentError(opts.agent, "schema", usage, error);
+        throw new AgentError(opts.agent, "schema", usage, error, "output did not match the schema");
       }
       if (NoOutputGeneratedError.isInstance(error)) {
         if (!repair) continue;
-        throw new AgentError(opts.agent, "schema", usage, error);
+        throw new AgentError(opts.agent, "schema", usage, error, "no output");
       }
       if (opts.signal?.aborted) throw new AgentError(opts.agent, "cancelled", usage, error);
-      if (deadline.aborted) throw new AgentError(opts.agent, "timeout", usage, error);
-      throw new AgentError(opts.agent, "api", usage, error);
+      if (deadline.aborted) {
+        throw new AgentError(
+          opts.agent,
+          "timeout",
+          usage,
+          error,
+          `no reply within ${opts.timeoutMs} ms`,
+        );
+      }
+      throw new AgentError(opts.agent, "api", usage, error, failureDetail(error));
     }
   }
   // Unreachable: the loop either returns or throws.
