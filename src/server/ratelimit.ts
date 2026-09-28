@@ -37,6 +37,13 @@ export function upstashLimiter(redis: Redis, perDay: number): Limiter {
   };
 }
 
+/** No per-visitor limit (RATE_LIMIT_PER_DAY=0). */
+export const noLimit: Limiter = {
+  async limit() {
+    return { success: true, remaining: Number.POSITIVE_INFINITY, reset: Date.now() };
+  },
+};
+
 /** In-process sliding window for local dev and tests (not shared across instances). */
 export function memoryLimiter(perDay: number, now: () => number = Date.now): Limiter {
   const hits = new Map<string, number[]>();

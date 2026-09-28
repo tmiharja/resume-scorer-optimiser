@@ -171,7 +171,9 @@ export default function UploadForm({
         >
           Analyse resume
         </Button>
-        <span className="text-[13px] text-muted">{dailyLimit} free analyses a day</span>
+        <span className="text-[13px] text-muted">
+          {dailyLimit > 0 ? `${dailyLimit} free analyses a day` : "Free to use"}
+        </span>
       </div>
 
       <PrivacyNotice />

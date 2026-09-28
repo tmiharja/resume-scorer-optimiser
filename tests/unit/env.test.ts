@@ -94,6 +94,11 @@ describe("parseEnv", () => {
     expect(parseEnv({ VERCEL_ENV: "preview", LLM_MOCK: "1" }).LLM_MOCK).toBe(true);
   });
 
+  it("accepts RATE_LIMIT_PER_DAY=0 (limit off) and rejects negatives", () => {
+    expect(parseEnv({ RATE_LIMIT_PER_DAY: "0" }).RATE_LIMIT_PER_DAY).toBe(0);
+    expect(() => parseEnv({ RATE_LIMIT_PER_DAY: "-1" })).toThrow(/RATE_LIMIT_PER_DAY/);
+  });
+
   it("rejects a short IP hash salt", () => {
     expect(() => parseEnv({ IP_HASH_SALT: "too-short" })).toThrow(/IP_HASH_SALT/);
   });
