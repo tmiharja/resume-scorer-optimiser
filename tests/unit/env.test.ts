@@ -55,6 +55,19 @@ describe("parseEnv", () => {
     expect(env.redisToken).toBe("kv-token");
   });
 
+  it("reads the database URL from a Neon connection made with the prefix NEON", () => {
+    const neon = "postgres://user:pass@neon-prefix.neon.tech/db";
+    for (const name of ["NEON_URL", "NEON_DATABASE_URL"]) {
+      const env = parseEnv({ ...PROD_OK, DATABASE_URL: undefined, [name]: neon });
+      expect(env.DATABASE_URL).toBe(neon);
+    }
+  });
+
+  it("prefers the NEON_* names over a leftover DATABASE_URL", () => {
+    const neon = "postgres://user:pass@neon-prefix.neon.tech/db";
+    expect(parseEnv({ ...PROD_OK, NEON_URL: neon }).DATABASE_URL).toBe(neon);
+  });
+
   it("lists every missing production variable by name, never by value", () => {
     let message = "";
     try {

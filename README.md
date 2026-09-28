@@ -80,7 +80,7 @@ Set them in `.env.local` for development, and in **Vercel → Project → Settin
 | Variable | Required in prod | Default | Notes |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | ✓ | — | From [platform.claude.com](https://platform.claude.com) → API keys |
-| `DATABASE_URL` | ✓ | — | Set by the **Neon** integration (`DATABASE_URL_UNPOOLED` is used for migrations if present) |
+| `DATABASE_URL` | ✓ | — | Set by the **Neon** integration (`DATABASE_URL_UNPOOLED` is used for migrations if present). Connected with the prefix `NEON` instead? `NEON_URL` / `NEON_URL_UNPOOLED` are used and take priority |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | ✓ | — | Or `KV_REST_API_URL` / `KV_REST_API_TOKEN`, as set by the **Upstash** integration |
 | `IP_HASH_SALT` | ✓ | — | Random secret, ≥ 32 characters: `openssl rand -hex 32` |
 | `MODEL_EXTRACTOR` … `MODEL_VERIFIER` | | `claude-haiku-4-5` | Per-agent model; see [Swapping models](#swapping-models) |
@@ -152,8 +152,9 @@ Everything is configured by env vars and integrations; no code changes are neede
 
 1. In the project: **Storage → Create Database → Neon** (Vercel Marketplace), Free plan.
 2. Choose region **AWS us-east-1 (N. Virginia)** to sit next to `iad1`.
-3. Connect it to the project for **Production, Preview and Development**. This sets `DATABASE_URL` and `DATABASE_URL_UNPOOLED` (preview deployments get their own database branch).
-4. Nothing else to do: **migrations run automatically on every deploy** (`scripts/vercel-build.mjs` runs `drizzle-kit migrate`, which is idempotent).
+3. Connect it to the project for **Production, Preview and Development**, keeping the environment variable prefix `DATABASE`. This sets `DATABASE_URL` and `DATABASE_URL_UNPOOLED` (preview deployments get their own database branch).
+   - If Vercel says *"This project already has an existing environment variable with name DATABASE_URL"*, either delete that old variable first, or use the prefix **`NEON`** instead. The app reads `NEON_URL` / `NEON_URL_UNPOOLED` (or `NEON_DATABASE_URL`) too, and prefers them over `DATABASE_URL`.
+4. Nothing else to do: **migrations run automatically on every deploy** (`scripts/vercel-build.ts` runs `drizzle-kit migrate`, which is idempotent).
 
 ### 4. Upstash Redis (rate limit + budget)
 
@@ -196,7 +197,8 @@ Leave `MODEL_*`, `RATE_LIMIT_PER_DAY` and `MONTHLY_BUDGET_USD` unset to use the 
 | "The analyser isn't available right now" (503) | Runtime config or Redis problem: check Vercel logs for `"event":"error"` with `where: analyze.config` or `analyze.guards` |
 | "We've reached this month's capacity" | The monthly budget breaker tripped: raise `MONTHLY_BUDGET_USD` or wait for the 1st |
 | Analyses stop with an error mid-way | Check the Anthropic Console for credit and spend-limit status |
-| No rows in Neon | Check logs for `analyze.analytics` errors and that `DATABASE_URL` is set for Production |
+| No rows in Neon | Check logs for `analyze.analytics` errors and that `DATABASE_URL` (or `NEON_URL`) is set for Production |
+| Connecting Neon fails: "existing environment variable with name DATABASE_URL" | Delete the old `DATABASE_URL`, or connect with the prefix `NEON` (see step 3 above) |
 
 ---
 
