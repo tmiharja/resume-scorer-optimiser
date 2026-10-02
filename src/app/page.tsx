@@ -6,7 +6,7 @@ import SiteHeader from "@/components/site-header";
 
 const STEPS = [
   ["Upload", "Your PDF is read in memory and checked for hidden text."],
-  ["Review", "AI reviewers score it against Singapore hiring conventions."],
+  ["Review", "AI reviewers score it against International hiring conventions."],
   ["Improve", "Get prioritised fixes and rewritten bullet points to copy."],
 ] as const;
 
@@ -15,7 +15,7 @@ const DIMENSIONS = [
   ["Clarity", "Concise, specific, easy to scan"],
   ["Structure", "Layout, length and section order"],
   ["ATS readiness", "Parses cleanly in applicant tracking systems"],
-  ["SG conventions", "No photo, NRIC, age or salary; consistent British spelling"],
+  ["International conventions", "Examples: No photo, NRIC, age or salary; consistent British spelling"],
 ] as const;
 
 // Display only; the server enforces the real limit (src/env.ts). 0 = no limit.
@@ -76,7 +76,7 @@ export default function Home() {
             <Hero>
               <Reveal>
                 <h1 id="hero-heading" className="text-4xl font-medium tracking-tight sm:text-5xl">
-                  Get your resume ready for Singapore recruiters.
+                  Get your resume ready for International recruiters.
                 </h1>
                 <p className="mt-4 max-w-[560px] text-[17px] leading-relaxed text-muted">
                   Upload a PDF. In about a minute you&apos;ll get a score, specific feedback and
