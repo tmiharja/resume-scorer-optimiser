@@ -1,12 +1,11 @@
 # Resume Optimiser
 
-A free web app for job seekers in **Singapore and Southeast Asia**. Upload a PDF resume, optionally paste a job description, and a pipeline of Claude agents returns:
-
+Web app with agentic workflow for job seekers in **Singapore and Southeast Asia**. Upload a PDF resume, optionally paste a job description, and a pipeline of LLM agents returns:
 - a scored critique against a Singapore hiring rubric;
 - a job-description match;
 - rewritten bullet points that never invent facts.
 
-It runs on Vercel, uses Claude through the Vercel AI SDK, and keeps only anonymised stats.
+It runs on Vercel, uses Claude Haiku through the Vercel AI SDK, and keeps only anonymised stats.
 
 | Doc | What's in it |
 |---|---|
@@ -129,8 +128,6 @@ Each agent's model is an env var: `MODEL_EXTRACTOR`, `MODEL_CRITIC`, `MODEL_MATC
 - **Prompt caching**: breakpoints are in place, but Haiku 4.5 only caches prompts of 4,096+ tokens, so expect little caching at this size. Cache hits show up in the logged token counts.
 - **Vercel Hobby, Neon Free and Upstash Free** are enough at this volume. Check their current limits in each dashboard.
 
-> ⚠️ **Set a monthly spend limit in the Anthropic Console** (platform.claude.com → Settings → Limits), e.g. US$20. The in-app breaker is a soft guard; the Console limit is the hard backstop.
-
 ---
 
 ## Deploying to Vercel (+ Neon + Upstash)
@@ -202,23 +199,6 @@ Leave `MODEL_*`, `RATE_LIMIT_PER_DAY` and `MONTHLY_BUDGET_USD` unset to use the 
 
 ---
 
-## Final checklist
-
-Before sharing the link:
-
-- [ ] Anthropic production key set, **Console spend limit on**
-- [ ] Neon connected (region us-east-1); the deploy log shows "Applying database migrations…" with no errors
-- [ ] Upstash connected (region us-east-1)
-- [ ] `IP_HASH_SALT` set (32+ random characters); `LLM_MOCK` **not** set
-- [ ] Fluid Compute on; function region `iad1`
-- [ ] Production build passed the environment check
-- [ ] Smoke test passed: result page, cost in logs, one anonymised row in Neon
-- [ ] Privacy page reviewed (`/privacy`), and `NEXT_PUBLIC_PORTFOLIO_URL` set
-- [ ] Hero images added (`src/img/`, wired in `src/img/hero.ts`), or placeholder accepted
-- [ ] Real-API evals run at least once (`npm run eval`) and reviewed
-
----
-
 ## Project structure
 
 ```
@@ -239,4 +219,3 @@ drizzle/          SQL migrations
 scripts/          vercel-build, check-env
 ```
 
-Known limitations are listed in [`PLAN.md` §12](PLAN.md#12-known-limitations-mvp).
