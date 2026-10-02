@@ -51,10 +51,6 @@ export default function Privacy() {
             .
           </p>
           <p>
-            Because your resume leaves Singapore for processing, please only upload what you&apos;re
-            comfortable sharing. You can remove personal details such as your NRIC or address first:
-            they aren&apos;t needed for the feedback, and Singapore resumes shouldn&apos;t include
-            them anyway.
           </p>
         </Section>
 
